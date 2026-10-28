@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-28",
+  "audio_source": "macOS say, Samantha voice, synthesized speech",
+  "language": "en",
+  "speech_model": "ggml-large-v3-turbo-q5_0.bin",
+  "cleanup_model_alias": "sonnet",
+  "spoken_text": "Clean up the repeated logic in that file. Keep the behavior the same.",
+  "whisper_transcript": "Clean up the repeated logic in that file.\n Keep the behavior the same.",
+  "synthetic_window_text": "User: We need to remove duplicate logic in parser.py.\nAssistant: I can refactor parser.py while preserving its behavior.",
+  "prompt_output": "Clean up the repeated logic in parser.py. Keep the behavior the same.",
+  "scope": "Synthesized WAV through whisper.cpp and clean.run; no microphone, Accessibility capture, keyboard shortcut, or paste verification."
+}

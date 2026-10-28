@@ -1,5 +1,5 @@
 {
-  "language": "zh",
+  "language": "en",
   "fix_model": "haiku",
   "prompt_model": "sonnet",
   "low_probability": 0.6,

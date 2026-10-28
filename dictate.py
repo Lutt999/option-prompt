@@ -131,7 +131,7 @@ def tick():
     # 录音时每半秒刷新一次秒数
     while recording:
         secs = int(time.time() - started_at)
-        ui(overlay.update_text, f"● {'录音中' if mode == 'fix' else '指令'}  {secs // 60}:{secs % 60:02d}")
+        ui(overlay.update_text, f"● {'Recording' if mode == 'fix' else 'Prompt'}  {secs // 60}:{secs % 60:02d}")
         time.sleep(0.5)
 
 
@@ -145,10 +145,10 @@ def start_recording():
     stream.start()
     recording = True
     started_at = time.time()
-    ui(overlay.show, "● 录音中  0:00" if mode == "fix" else "● 指令  0:00", RED)
+    ui(overlay.show, "● Recording  0:00" if mode == "fix" else "● Prompt  0:00", RED)
     play(START_SOUND)
     threading.Thread(target=tick, daemon=True).start()
-    log("开始录音")
+    log("Recording started")
 
 
 def stop_recording():
@@ -165,8 +165,8 @@ def stop_recording():
     audio = np.concatenate(chunks) if chunks else np.zeros((0, 1), dtype="int16")
     if target is not None:
         target.text = context.window_text(target.window, int(SETTINGS['context_chars']))
-    log(f"结束录音，{len(audio) / RATE:.1f} 秒")
-    ui(overlay.show, "识别中…", ORANGE)
+    log(f"Recording stopped: {len(audio) / RATE:.1f}s")
+    ui(overlay.show, "Transcribing…", ORANGE)
     threading.Thread(target=transcribe_and_paste, args=(audio, mode, target), daemon=True).start()
 
 
@@ -217,8 +217,8 @@ def transcribe_and_paste(audio, m, target):
 
 def _transcribe_and_paste(audio, m, target):
     if len(audio) < RATE * 0.3:
-        log("录音太短，忽略")
-        flash_then_hide("录音太短", GRAY)
+        log("Recording too short; ignored")
+        flash_then_hide("Recording too short", GRAY)
         return
     try:
         r = requests.post(
@@ -233,24 +233,24 @@ def _transcribe_and_paste(audio, m, target):
         words = [w for seg in d.get("segments", []) for w in seg.get("words", [])]
         marked = (clean.mark_low(words) if words else "") or text
     except Exception as e:
-        log(f"识别失败：{e}")
+        log(f"Transcription failed: {e}")
         play(ERROR_SOUND)
-        flash_then_hide("识别失败", GRAY, 2)
+        flash_then_hide("Transcription failed", GRAY, 2)
         return
-    log("识别完成")
+    log("Transcription complete")
     if not text:
-        flash_then_hide("没有听到内容", GRAY)
+        flash_then_hide("No speech detected", GRAY)
         return
     raw = text
     try:
-        ui(overlay.show, "整理中…" if m == "fix" else "写指令中…", ORANGE)
+        ui(overlay.show, "Cleaning up…" if m == "fix" else "Writing prompt…", ORANGE)
         alt = clean.sensevoice(audio, RATE)
         text, note = clean.run(raw, marked, m, target, alt)
-        log(f"整理完成（{m}，{note}）")
+        log(f"Cleanup complete ({m}, {note})")
         clean.remember(target, text)
     except Exception as e:
         text = raw
-        log(f"中间层出错，粘原文：{e!r}")
+        log(f"Cleanup failed; using transcript: {e!r}")
     ui(deliver, text, target)
 
 
@@ -266,8 +266,8 @@ def deliver(text, target):
     except Exception:
         current = None
     if target is None or not target.same_field(current):
-        overlay.show('已复制 · 请粘贴', GRAY)
-        threading.Thread(target=flash_then_hide, args=('已复制 · 请粘贴', GRAY, 2), daemon=True).start()
+        overlay.show('Copied · Cmd+V', GRAY)
+        threading.Thread(target=flash_then_hide, args=('Copied · Cmd+V', GRAY, 2), daemon=True).start()
         return
     with kb.pressed(keyboard.Key.cmd):
         kb.press('v')
@@ -341,5 +341,5 @@ if __name__ == "__main__":
     overlay = Overlay()
     threading.Thread(target=clean.sensevoice, args=(np.zeros(RATE // 2, dtype="int16"),), daemon=True).start()   # 预载第二识别器
     keyboard.Listener(on_press=on_press, on_release=on_release).start()
-    log("语音输入已启动：右 Command = 纠错粘贴；右 Option = 改写成指令")
+    log("Ready: Right Command = dictation; Right Option = AI prompt")
     AppHelper.runEventLoop()
