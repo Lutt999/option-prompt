@@ -30,8 +30,11 @@ class Target:
     def same_window(self, other):
         return other is not None and self.pid == other.pid and self.window is not None and self.window == other.window
 
+    def same_conversation(self, other):
+        return self.same_window(other) and self.title == other.title
+
     def same_field(self, other):
-        return self.same_window(other) and self.focused is not None and self.focused == other.focused
+        return self.same_conversation(other) and self.focused is not None and self.focused == other.focused
 
 
 def window_text(window, limit):

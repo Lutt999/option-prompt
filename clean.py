@@ -71,7 +71,7 @@ def recent(target):
         return ''
     now = time.monotonic()
     return '\n---\n'.join(text[:600] for stamp, previous, text in _history[-20:]
-                         if now - stamp < 1200 and target.same_window(previous))[-3000:]
+                         if now - stamp < 1200 and target.same_conversation(previous))[-3000:]
 
 
 def remember(target, text):

@@ -154,7 +154,7 @@ def start_recording():
 def stop_recording():
     global recording, stream
     try:
-        target = context.capture()
+        target = context.capture(read_text=False)
     except Exception:
         target = None
     stream.stop()
@@ -163,6 +163,8 @@ def stop_recording():
     recording = False
     play(STOP_SOUND)
     audio = np.concatenate(chunks) if chunks else np.zeros((0, 1), dtype="int16")
+    if target is not None:
+        target.text = context.window_text(target.window, int(SETTINGS['context_chars']))
     log(f"结束录音，{len(audio) / RATE:.1f} 秒")
     ui(overlay.show, "识别中…", ORANGE)
     threading.Thread(target=transcribe_and_paste, args=(audio, mode, target), daemon=True).start()

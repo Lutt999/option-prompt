@@ -2,11 +2,30 @@
 
 [简体中文](README.zh-CN.md)
 
-Tap **Right Option**, speak, then tap it again. Your words become an instruction for the AI conversation in the window you are typing into. When a word remains uncertain, the output keeps alternatives such as `〔Savio / S3〕` instead of silently choosing one.
+**Speak naturally. Give your AI a clearer instruction.**
 
-**Right Command** uses the same pipeline for corrected dictation, with less rewriting.
+Option Prompt is a small macOS tool that turns spoken thoughts into prompts for the AI conversation you already have open. Tap **Right Option** to start, speak, and tap it again to finish. It uses the destination window's conversation to clarify what you mean. Words it cannot confidently resolve can stay as inline alternatives, such as `〔Savio / S3〕`.
 
-This is a small macOS source release extracted from a personal voice-input tool. It uses local Whisper recognition, optional SenseVoice recognition, and Claude for text processing. No subscription or account is provided by this project; the Claude CLI needs your own supported sign-in or API configuration.
+macOS · Local speech recognition · Claude text processing · MIT
+
+[Get started](#install) · [How it works](#how-it-works) · [Data flow](#data-flow) · [Feedback](https://github.com/Lutt999/option-prompt/issues)
+
+## Why I made this
+
+I often have several AI conversations open for different projects. When I speak, I use shorthand: “that file,” “the thing we just discussed,” or “finish the rest.” A useful voice-input tool needs to know which conversation I am replying to and preserve the places where the wording is uncertain.
+
+I made this for my own workflow and am sharing the source in case it is useful to someone else. It is a personal project, with a small scope and source installation rather than a packaged commercial app. Improvements and reports from people using it in their own workflows are welcome.
+
+## Two shortcuts
+
+| Shortcut | Output |
+| --- | --- |
+| **Right Option** | An AI instruction, with references clarified from the destination conversation |
+| **Right Command** | Corrected dictation that stays close to the original wording |
+
+Clear readings are written directly. Ambiguous readings can keep candidates. Both modes preserve your requests, tone, and constraints; instruction mode is told to avoid adding requirements you did not say.
+
+It uses local Whisper recognition, optional SenseVoice recognition, and Claude for text processing. You bring your own supported Claude CLI sign-in or API configuration.
 
 ## How it works
 
@@ -18,7 +37,7 @@ This is a small macOS source release extracted from a personal voice-input tool.
 
 For example, when the captured conversation is about `parser.py`, “把那个文件里的重复逻辑整理一下” can become “把 parser.py 里的重复逻辑整理一下。” This is an illustrative example, not a recorded result.
 
-The window snapshot is taken **when recording stops**, not selected from whichever project log changed most recently. Recent dictations are scoped to that window and kept only in memory.
+The destination is fixed **when recording stops**. Recent dictations are scoped to that window and its title, and kept only in memory. If you switch to a different conversation title in the same window, those earlier dictations are left out.
 
 ## Install
 
@@ -77,9 +96,9 @@ Audio goes to the configured Whisper endpoint, which is local by default. Option
 
 The app does not save audio, transcripts, or conversation snapshots to disk. Claude and any configured provider have their own data policies; the speech server may print recognition details to its terminal. Password fields are skipped. If AI processing fails, the original transcript is returned.
 
-## Related projects
+## Other projects in this space
 
-Voice-to-prompt conversion and context-aware dictation have existing open-source implementations. This project does not claim to have invented either idea.
+There are several good projects for dictation, prompt rewriting, and contextual input. These are worth knowing about:
 
 | Project | Related capability |
 | --- | --- |
@@ -90,6 +109,12 @@ Voice-to-prompt conversion and context-aware dictation have existing open-source
 | [HoldSpeak](https://github.com/karolswdev/HoldSpeak) | Project-aware dictation rewriting and coding-session workflows |
 | [Veery](https://github.com/andyhcwang/veery) | Multilingual recognition and terminology correction |
 
-Option Prompt keeps a narrow workflow: stop-time window context, separate dictation and AI-instruction shortcuts, and inline alternatives for unresolved words. The public code has been reorganized from the personal version; no comparative accuracy or speed claim is made.
+Option Prompt focuses on one personal workflow: destination-window context, separate dictation and AI-instruction shortcuts, and inline alternatives for unresolved words. It shares ideas with this broader category; it makes no claim of inventing the category or outperforming the projects above.
+
+## Feedback and contributions
+
+If it fits your workflow, use it, adapt it, or send a pull request. [Issues](https://github.com/Lutt999/option-prompt/issues) are welcome for setup problems, missing app context, or suggestions. Describe the app and behavior involved, and use a small invented example rather than posting private conversation text or credentials.
+
+## Credits and license
 
 Built on [whisper.cpp](https://github.com/ggml-org/whisper.cpp), with optional [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) through [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). Application code is MIT licensed. Model files and dependencies retain their respective licenses.

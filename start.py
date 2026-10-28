@@ -20,7 +20,9 @@ def reachable(host, port):
 def main():
     root = Path(__file__).resolve().parent
     url = urlparse(SETTINGS['whisper_url'])
-    host, port = url.hostname, url.port or 80
+    if url.scheme not in ('http', 'https') or not url.hostname:
+        raise SystemExit('whisper_url must be an http:// or https:// endpoint.')
+    host, port = url.hostname, url.port or (443 if url.scheme == 'https' else 80)
     server = None
     app = None
     try:
