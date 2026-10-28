@@ -1,0 +1,95 @@
+# Option Prompt
+
+[简体中文](README.zh-CN.md)
+
+Tap **Right Option**, speak, then tap it again. Your words become an instruction for the AI conversation in the window you are typing into. When a word remains uncertain, the output keeps alternatives such as `〔Savio / S3〕` instead of silently choosing one.
+
+**Right Command** uses the same pipeline for corrected dictation, with less rewriting.
+
+This is a small macOS source release extracted from a personal voice-input tool. It uses local Whisper recognition, optional SenseVoice recognition, and Claude for text processing. No subscription or account is provided by this project; the Claude CLI needs your own supported sign-in or API configuration.
+
+## How it works
+
+1. Tap a shortcut to start recording. Speak naturally.
+2. Put the text cursor in the destination window before tapping the shortcut to stop. At that moment, the app captures that window and its text through macOS Accessibility.
+3. Whisper transcribes locally. Words below the configured recognition threshold are marked for the text processor. Optionally, SenseVoice supplies a second transcript.
+4. Claude corrects the words and, in instruction mode, resolves omitted objects and references from the captured conversation. Clear readings are written directly; unresolved readings keep inline alternatives.
+5. The result is pasted if the same window and input element are still focused. Otherwise it is left on the clipboard for you to paste. The tool never presses Return.
+
+For example, when the captured conversation is about `parser.py`, “把那个文件里的重复逻辑整理一下” can become “把 parser.py 里的重复逻辑整理一下。” This is an illustrative example, not a recorded result.
+
+The window snapshot is taken **when recording stops**, not selected from whichever project log changed most recently. Recent dictations are scoped to that window and kept only in memory.
+
+## Install
+
+Requires macOS, Python 3.10+, a microphone, and the [Claude CLI](https://code.claude.com/docs/en/setup). Apple Silicon is recommended for local recognition.
+
+```sh
+brew install python@3.12 portaudio whisper-cpp
+git clone https://github.com/Lutt999/option-prompt.git
+cd option-prompt
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+mkdir -p ~/.config/option-prompt
+cp config.example.json ~/.config/option-prompt/config.json
+curl -fL --create-dirs \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin \
+  -o ~/.local/share/option-prompt/models/ggml-large-v3-turbo-q5_0.bin
+.venv/bin/python start.py
+```
+
+Finish the Claude CLI's own setup before starting. Grant Microphone, Accessibility, and Input Monitoring permissions to the terminal or Python process when macOS requests them. Quit another copy of this tool before starting one with the same shortcuts.
+
+`start.py` starts a loopback Whisper server if one is not already listening. Stop it with Ctrl+C. This release has no signed app bundle or automatic startup installer.
+
+## Configuration
+
+Edit `~/.config/option-prompt/config.json`. Restart the app after changes. Defaults are in [config.py](config.py).
+
+| Setting | Purpose |
+| --- | --- |
+| `language` | Recognition language; defaults to `zh` |
+| `fix_model`, `prompt_model` | Claude model aliases; default `haiku` and `sonnet` |
+| `fix_timeout`, `prompt_timeout` | Maximum wait for text processing, in seconds |
+| `low_probability` | Whisper word-probability threshold; default `0.6` |
+| `context_chars` | Maximum window-text characters sent as context |
+| `background_file` | Optional UTF-8 notes about your work |
+| `glossary_files` | Optional list of UTF-8 terminology files |
+| `sensevoice_dir` | Optional directory containing `model.int8.onnx` and `tokens.txt` |
+| `whisper_model` | Path to your downloaded whisper.cpp model |
+| `whisper_url` | Speech server endpoint; defaults to loopback port 8178 |
+
+To use a different configuration directory, set `OPTION_PROMPT_CONFIG_DIR`.
+
+SenseVoice is optional. Install it with `.venv/bin/python -m pip install sherpa-onnx`, obtain a compatible [SenseVoice ONNX model](https://k2-fsa.github.io/sherpa/onnx/sense-voice/index.html), and set `sensevoice_dir`. The model is downloaded separately and retains its own license.
+
+A glossary can be simple text such as `get hub → GitHub`. Background notes and glossaries help spelling; the captured window remains the source for resolving conversation references.
+
+## Context and uncertainty
+
+The tool reads text that the destination window exposes through Accessibility, within a bounded snapshot. It cannot promise the entire conversation history: unloaded messages, hidden terminal scrollback, and apps with inaccessible content may be absent. Without readable context, the processor is instructed to leave unresolved references alone. It does not scan other conversations, browser history, or local agent-session logs.
+
+The confidence threshold is a recognition hint, not a calibrated probability that an interpretation is correct. Alternatives are generated by the text model and can still be mistaken. They are deliberately shown without invented percentages.
+
+## Data flow
+
+Audio goes to the configured Whisper endpoint, which is local by default. Optional SenseVoice also runs locally. The transcript, captured window text, relevant recent dictations, and configured reference files are sent to Claude through the CLI. **AI processing is not fully offline.** Use the tool only in windows whose text you want to include in that request.
+
+The app does not save audio, transcripts, or conversation snapshots to disk. Claude and any configured provider have their own data policies; the speech server may print recognition details to its terminal. Password fields are skipped. If AI processing fails, the original transcript is returned.
+
+## Related projects
+
+Voice-to-prompt conversion and context-aware dictation have existing open-source implementations. This project does not claim to have invented either idea.
+
+| Project | Related capability |
+| --- | --- |
+| [LocalFlow](https://github.com/azz1804/localflow) | Dictation-to-prompt mode with application hints |
+| [ReadyType](https://github.com/whnnick/readytype) | Chinese-first dictation and AI-instruction output |
+| [VoiceInk](https://github.com/Beingpax/VoiceInk) | AI enhancement with window, selection, and clipboard context |
+| [WhisperLocal](https://github.com/usingcolor/WhisperLocal) | Local dictation, personal context, and recent-topic context |
+| [HoldSpeak](https://github.com/karolswdev/HoldSpeak) | Project-aware dictation rewriting and coding-session workflows |
+| [Veery](https://github.com/andyhcwang/veery) | Multilingual recognition and terminology correction |
+
+Option Prompt keeps a narrow workflow: stop-time window context, separate dictation and AI-instruction shortcuts, and inline alternatives for unresolved words. The public code has been reorganized from the personal version; no comparative accuracy or speed claim is made.
+
+Built on [whisper.cpp](https://github.com/ggml-org/whisper.cpp), with optional [SenseVoice](https://github.com/FunAudioLLM/SenseVoice) through [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx). Application code is MIT licensed. Model files and dependencies retain their respective licenses.

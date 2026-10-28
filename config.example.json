@@ -1,0 +1,10 @@
+{
+  "language": "zh",
+  "fix_model": "haiku",
+  "prompt_model": "sonnet",
+  "low_probability": 0.6,
+  "context_chars": 12000,
+  "background_file": "",
+  "glossary_files": [],
+  "sensevoice_dir": ""
+}

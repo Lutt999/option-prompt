@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+*.wav
+*.onnx
+*.bin
+*.jsonl
+.DS_Store
+.env*
+config.json
+models/
+logs/
+research/
